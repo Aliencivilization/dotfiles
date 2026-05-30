@@ -18,11 +18,21 @@ Plug 'https://github.com/ap/vim-css-color'
 Plug 'https://github.com/rafi/awesome-vim-colorschemes'
 Plug 'https://github.com/ryanoasis/vim-devicons'
 Plug 'https://github.com/tc50cal/vim-terminal'
-Plug 'https://github.com/terryma/vim-multiple-cursors'
+Plug 'mg979/vim-visual-multi', {'branch': 'master'}
 Plug 'MunifTanjim/nui.nvim'
 Plug 'rcarriga/nvim-notify'
 Plug 'folke/noice.nvim'
 Plug 'rebelot/kanagawa.nvim'
+
+" LSP
+Plug 'neovim/nvim-lspconfig'
+
+" Автодополнение
+Plug 'hrsh7th/nvim-cmp'
+Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'hrsh7th/cmp-buffer'
+Plug 'L3MON4D3/LuaSnip'
+Plug 'saadparwaiz1/cmp_luasnip'
 
 call plug#end()
 
@@ -75,6 +85,21 @@ vnoremap <C-c> "+y
 nnoremap <C-c> "+yy
 vnoremap <C-v> "+p
 nnoremap <C-v> "+p
+
+nnoremap <F5> :w<CR>:call BuildAndRun()<CR>
+
+function! BuildAndRun()
+  let root = findfile('CMakeLists.txt', '.;')
+  if root == ''
+    echo "CMakeLists.txt не найден"
+    return
+  endif
+  let root_dir = fnamemodify(root, ':p:h')
+  let build_dir = root_dir . '/build'
+
+  botright split
+  execute 'terminal bash -c "cd ' . build_dir . ' && cmake --build . && ./main; echo \"\n--- готово, нажми Enter ---\"; read"'
+endfunction
 
 " ============================================
 " LIQUID GLASS для Neovim (vimscript)
@@ -140,3 +165,39 @@ augroup LiquidGlass
   autocmd ColorScheme * highlight EndOfBuffer guibg=NONE ctermbg=NONE
   autocmd ColorScheme * highlight SignColumn  guibg=NONE ctermbg=NONE
 augroup END
+
+lua << EOF
+-- новый API lspconfig v3
+vim.lsp.config('clangd', {
+  cmd = { "clangd", "--background-index" },
+  filetypes = { "c", "cpp" },
+  on_attach = function(client, bufnr)
+    local opts = { buffer = bufnr }
+    vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+    vim.keymap.set('n', 'K',  vim.lsp.buf.hover, opts)
+    vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
+  end,
+})
+vim.lsp.enable('clangd')
+
+-- автодополнение (это остаётся без изменений)
+local cmp = require('cmp')
+local luasnip = require('luasnip')
+
+cmp.setup({
+  snippet = {
+    expand = function(args) luasnip.lsp_expand(args.body) end,
+  },
+  mapping = cmp.mapping.preset.insert({
+    ['<Tab>']     = cmp.mapping.select_next_item(),
+    ['<S-Tab>']   = cmp.mapping.select_prev_item(),
+    ['<CR>']      = cmp.mapping.confirm({ select = true }),
+    ['<C-Space>'] = cmp.mapping.complete(),
+  }),
+  sources = {
+    { name = 'nvim_lsp' },
+    { name = 'luasnip' },
+    { name = 'buffer' },
+  },
+})
+EOF
