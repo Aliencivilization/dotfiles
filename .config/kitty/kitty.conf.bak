@@ -6,13 +6,8 @@ font_size 11.0
 cursor_shape beam
 cursor_trail 1
 
-# Liquid glass
-background_opacity 0.5
-background_blur 32
-dunamic_background_color_yes
-
 # Padding (consistency with foot)
-window_margin_width 21
+window_margin_width 21.75
 
 # No close confirmation
 confirm_os_window_close 0
@@ -21,7 +16,7 @@ confirm_os_window_close 0
 shell fish
 
 # Include generated theme colors
-// include ~/.config/kitty/kitty-themes/themes/3024_Night.conf
+// include current-theme.conf
 
 # Copy
 map ctrl+c    copy_or_interrupt
@@ -45,8 +40,6 @@ map ctrl+kp_0 change_font_size all 0
 
 
 # BEGIN_KITTY_THEME
-# Catppuccin-Mocha
-include themes/catppuccin-mocha.conf
+# Catppuccin-Macchiato
+include current-theme.conf
 # END_KITTY_THEME
-
-allow_remote_control yes
